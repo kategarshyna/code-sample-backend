@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  php:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=mysql://TEST_USER:TEST_PASSWORD@mysql:3306/test_api_db?serverVersion=5.7.44&charset=utf8mb4
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: TEST_ROOT_PASSWORD
+      MYSQL_DATABASE: test_api_db
+      MYSQL_USER: TEST_USER
+      MYSQL_PASSWORD: TEST_PASSWORD
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
